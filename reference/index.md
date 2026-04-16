@@ -1,0 +1,47 @@
+# Package index
+
+## Engine
+
+Top-level rolling computation functions.
+
+- [`roll_nonlinear()`](https://rollnonlinear.github.io/rollNonlinear/reference/roll_nonlinear.md)
+  : Rolling nonlinear metrics for multiple symbols
+- [`roll_nonlinear_one()`](https://rollnonlinear.github.io/rollNonlinear/reference/roll_nonlinear_one.md)
+  : Rolling nonlinear metrics for a single symbol
+
+## Metrics
+
+Registry queries.
+
+- [`available_metrics()`](https://rollnonlinear.github.io/rollNonlinear/reference/available_metrics.md)
+  : List available metrics
+- [`register_metric()`](https://rollnonlinear.github.io/rollNonlinear/reference/register_metric.md)
+  : Register a custom rolling metric
+
+## Series transforms
+
+Built-in constructors for the `series` argument.
+
+- [`series_close()`](https://rollnonlinear.github.io/rollNonlinear/reference/series_close.md)
+  : Extract a single column as the series
+- [`series_log_returns()`](https://rollnonlinear.github.io/rollNonlinear/reference/series_log_returns.md)
+  : Log-returns of a price column
+- [`series_typical()`](https://rollnonlinear.github.io/rollNonlinear/reference/series_typical.md)
+  : Typical price: (High + Low + Close) / 3
+- [`series_range()`](https://rollnonlinear.github.io/rollNonlinear/reference/series_range.md)
+  : Price range: High - Low
+
+## Parallel helpers
+
+Manage mirai daemons.
+
+- [`rn_daemons()`](https://rollnonlinear.github.io/rollNonlinear/reference/rn_daemons.md)
+  : Query or set mirai daemons
+- [`rn_stop_daemons()`](https://rollnonlinear.github.io/rollNonlinear/reference/rn_stop_daemons.md)
+  : Stop mirai daemons
+
+## Package
+
+- [`rollNonlinear`](https://rollnonlinear.github.io/rollNonlinear/reference/rollNonlinear-package.md)
+  [`rollNonlinear-package`](https://rollnonlinear.github.io/rollNonlinear/reference/rollNonlinear-package.md)
+  : rollNonlinear: Rolling Nonlinear Time-Series Metrics Engine
