@@ -1,0 +1,29 @@
+Package: rollNonlinear
+Title: Rolling Nonlinear Time-Series Metrics Engine
+Version: 0.0.1
+Date: 2026-04-16
+Authors@R: 
+    person("rollNonlinear", "Authors", role = c("aut", "cre"),
+           email = "rollnonlinear@example.com")
+Author: rollNonlinear Authors [aut, cre]
+Maintainer: rollNonlinear Authors <rollnonlinear@example.com>
+Description: Computes rolling window nonlinear time-series metrics for a single
+    symbol using sequential execution. Supports Hurst exponent estimation and
+    Detrended Fluctuation Analysis (DFA) via the 'nonlinearTseries' package.
+    Designed as Phase 1 of a larger engine; later phases will add multi-symbol
+    dispatch, parallelism, additional metrics, and a metric registry.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Imports:
+    checkmate,
+    cli,
+    data.table,
+    nonlinearTseries
+Suggests:
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+Depends: 
+    R (>= 4.1.0)

@@ -1,0 +1,17 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.Rhistory$
+^\.RData$
+^\.Ruserdata$
+^LICENSE\.md$
+^README\.Rmd$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
+^codecov\.yml$
+^cran-comments\.md$
+^\.lintr$
+^revdep$
+^\.git$
+^\.gitignore$
