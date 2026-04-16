@@ -1,26 +1,4 @@
 # ---------------------------------------------------------------------------
-# Metric dispatch table
-# ---------------------------------------------------------------------------
-# Each entry is a list with:
-#   fn    - the wrapper function (x, .args = list()) -> named numeric
-#   cols  - character vector of output column names
-#
-# Phase 2 can replace this with a proper registry without changing
-# roll_nonlinear_one() internals.
-# ---------------------------------------------------------------------------
-
-.METRIC_REGISTRY <- list(
-  hurst = list(
-    fn   = NULL,  # filled in below after function definitions
-    cols = "hurst"
-  ),
-  dfa = list(
-    fn   = NULL,
-    cols = "dfa_alpha"
-  )
-)
-
-# ---------------------------------------------------------------------------
 # Wrapper: Hurst exponent (via DFA scaling exponent)
 #
 # Uses Detrended Fluctuation Analysis to estimate the Hurst exponent:
@@ -97,24 +75,18 @@
 }
 
 # ---------------------------------------------------------------------------
-# Wire wrappers into the dispatch table
-# ---------------------------------------------------------------------------
-
-.METRIC_REGISTRY[["hurst"]][["fn"]] <- .metric_hurst
-.METRIC_REGISTRY[["dfa"]][["fn"]]   <- .metric_dfa
-
-# ---------------------------------------------------------------------------
 # User-facing helper
 # ---------------------------------------------------------------------------
 
 #' List available metrics
 #'
-#' Returns the names of all metrics supported in Phase 1.
+#' Returns the names of all metrics registered in the metric registry,
+#' including built-in and any user-registered metrics.
 #'
 #' @return A sorted character vector of metric names.
 #' @export
 #' @examples
 #' available_metrics()
 available_metrics <- function() {
-  sort(names(.METRIC_REGISTRY))
+  ls(.metric_registry, sorted = TRUE)
 }

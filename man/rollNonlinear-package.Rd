@@ -6,11 +6,12 @@
 \alias{rollNonlinear-package}
 \title{rollNonlinear: Rolling Nonlinear Time-Series Metrics Engine}
 \description{
-Computes rolling window nonlinear time-series metrics for a single symbol
-using sequential execution. Supports Hurst exponent estimation and
-Detrended Fluctuation Analysis (DFA) via the \pkg{nonlinearTseries} package.
-Designed as Phase 1 of a larger engine; later phases will add multi-symbol
-dispatch, parallelism, additional metrics, and a metric registry.
+Computes rolling window nonlinear time-series metrics (Hurst exponent,
+Detrended Fluctuation Analysis, sample and approximate entropy, Lyapunov
+exponent, correlation dimension) for one or more symbols in OHLC-style
+data.tables. Provides an extensible metric registry via
+\code{\link[=register_metric]{register_metric()}}, built-in series transforms, and optional parallel
+execution via \link[mirai:mirai]{mirai} for multi-symbol workloads.
 }
 \author{
 \strong{Maintainer}: rollNonlinear Authors \email{rollnonlinear@example.com}

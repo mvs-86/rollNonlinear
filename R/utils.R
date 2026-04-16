@@ -1,15 +1,3 @@
-#' Null-coalescing operator
-#'
-#' Returns `lhs` if it is not `NULL`, otherwise `rhs`.
-#'
-#' @param lhs Left-hand side value.
-#' @param rhs Right-hand side default value.
-#' @return `lhs` if non-`NULL`, else `rhs`.
-#' @noRd
-`%||%` <- function(lhs, rhs) {
-  if (is.null(lhs)) rhs else lhs
-}
-
 #' Safely coerce a value to integer
 #'
 #' Coerces `x` to integer if it is a whole number, otherwise returns `x`

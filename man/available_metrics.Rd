@@ -10,7 +10,8 @@ available_metrics()
 A sorted character vector of metric names.
 }
 \description{
-Returns the names of all metrics supported in Phase 1.
+Returns the names of all metrics registered in the metric registry,
+including built-in and any user-registered metrics.
 }
 \examples{
 available_metrics()

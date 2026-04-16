@@ -1,0 +1,53 @@
+url: https://rollnonlinear.github.io/rollNonlinear/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    github:
+      icon: fab fa-github fa-lg
+      href: https://github.com/rollnonlinear/rollNonlinear
+
+reference:
+  - title: "Engine"
+    desc: "Top-level rolling computation functions."
+    contents:
+      - roll_nonlinear
+      - roll_nonlinear_one
+
+  - title: "Metrics"
+    desc: "Registry queries."
+    contents:
+      - available_metrics
+      - register_metric
+
+  - title: "Series transforms"
+    desc: "Built-in constructors for the `series` argument."
+    contents:
+      - series_close
+      - series_log_returns
+      - series_typical
+      - series_range
+
+  - title: "Parallel helpers"
+    desc: "Manage mirai daemons."
+    contents:
+      - rn_daemons
+      - rn_stop_daemons
+
+  - title: "Package"
+    contents:
+      - rollNonlinear-package
+
+articles:
+  - title: "Getting started"
+    navbar: ~
+    contents:
+      - rolling-nonlinear
+
+news:
+  - one_page: true

@@ -7,12 +7,13 @@
 #' @param stride Positive integer.
 #' @param min_obs Positive integer (<= window_size).
 #' @param on_error One of `"warn_na"`, `"stop"`, `"silent_na"`.
+#' @param metric_args Named list with names subset of `metrics`.
 #'
 #' @return Invisibly `TRUE` on success; calls [cli::cli_abort()] on failure.
 #' @noRd
 .validate_roll_args <- function(x, times, metrics,
                                 window_size, stride, min_obs,
-                                on_error) {
+                                on_error, metric_args = list()) {
   # --- x --------------------------------------------------------------------
   x_check <- checkmate::check_numeric(x, min.len = 2L, any.missing = TRUE)
   if (!isTRUE(x_check)) {
@@ -94,6 +95,23 @@
     cli::cli_abort(
       c("{.arg on_error} is invalid.", "x" = "{oe_check}")
     )
+  }
+
+  # --- metric_args ----------------------------------------------------------
+  if (length(metric_args) > 0L) {
+    ma_check <- checkmate::check_list(metric_args, names = "named")
+    if (!isTRUE(ma_check)) {
+      cli::cli_abort(
+        c("{.arg metric_args} must be a named list.", "x" = "{ma_check}")
+      )
+    }
+    bad_ma <- setdiff(names(metric_args), metrics)
+    if (length(bad_ma) > 0L) {
+      cli::cli_abort(
+        "Names in {.arg metric_args} must be a subset of {.arg metrics}: \\
+        {.val {bad_ma}} not in {.val {metrics}}."
+      )
+    }
   }
 
   invisible(TRUE)

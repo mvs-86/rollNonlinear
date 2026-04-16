@@ -38,6 +38,10 @@
 #'   }
 #'   The schema is stable even when all metric values are `NA`. Returns a
 #'   0-row `data.table` with the same schema when there are no valid windows.
+#' @param metric_args Named list of per-metric argument overrides, keyed by
+#'   metric name. Each element is passed as `.args` to the metric wrapper
+#'   (merged with the metric's registered defaults via [utils::modifyList()]).
+#'   Names must be a subset of `metrics`. Default: `list()`.
 #'
 #' @export
 #' @examples
@@ -60,7 +64,8 @@ roll_nonlinear_one <- function(
     window_size = 100L,
     stride      = 1L,
     min_obs     = window_size,
-    on_error    = c("warn_na", "stop", "silent_na")
+    on_error    = c("warn_na", "stop", "silent_na"),
+    metric_args = list()
 ) {
   # --- match arguments -------------------------------------------------------
   on_error <- match.arg(on_error)
@@ -72,12 +77,12 @@ roll_nonlinear_one <- function(
 
   # --- validate --------------------------------------------------------------
   .validate_roll_args(x, times, metrics, window_size, stride, min_obs,
-                      on_error)
+                      on_error, metric_args)
 
   # --- build output schema ---------------------------------------------------
-  # Determine all output columns for the requested metrics
+  # Determine all output columns for the requested metrics via registry
   all_metric_cols <- unlist(
-    lapply(metrics, function(m) .METRIC_REGISTRY[[m]][["cols"]]),
+    lapply(metrics, function(m) get_metric(m)[["outputs"]]),
     use.names = FALSE
   )
 
@@ -123,9 +128,11 @@ roll_nonlinear_one <- function(
     has_na <- anyNA(x_win)
 
     for (m in metrics) {
-      entry    <- .METRIC_REGISTRY[[m]]
-      out_cols <- entry[["cols"]]
+      spec     <- get_metric(m)
+      out_cols <- spec[["outputs"]]
       na_vals  <- stats::setNames(rep(NA_real_, length(out_cols)), out_cols)
+      merged_args <- utils::modifyList(spec[["defaults"]],
+                                       metric_args[[m]] %||% list())
 
       if (has_na) {
         dedup_key <- paste0(m, "::NA_in_window")
@@ -144,7 +151,7 @@ roll_nonlinear_one <- function(
 
       # Normal computation path
       metric_result <- tryCatch(
-        entry[["fn"]](x_win, .args = list()),
+        spec[["fn"]](x_win, .args = merged_args),
         error = function(err) {
           structure(list(msg = conditionMessage(err)), class = "metric_error")
         }

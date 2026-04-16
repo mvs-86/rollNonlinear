@@ -1,0 +1,86 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file. -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# rollNonlinear
+
+<!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/rollNonlinear)](https://CRAN.R-project.org/package=rollNonlinear)
+[![R-CMD-check](https://github.com/rollnonlinear/rollNonlinear/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rollnonlinear/rollNonlinear/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/rollnonlinear/rollNonlinear/branch/main/graph/badge.svg)](https://app.codecov.io/gh/rollnonlinear/rollNonlinear?branch=main)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- badges: end -->
+
+`rollNonlinear` computes rolling-window nonlinear time-series metrics —
+Hurst exponent, DFA, sample/approximate entropy, Lyapunov exponent, and
+correlation dimension — on OHLC data for one or more symbols. It provides an
+extensible metric registry, built-in series transforms, and optional parallel
+execution via [`mirai`](https://mirai.r-lib.org/).
+
+## Installation
+
+```{r, eval = FALSE}
+# CRAN (once released):
+install.packages("rollNonlinear")
+
+# Development version from GitHub:
+# install.packages("remotes")
+remotes::install_github("rollnonlinear/rollNonlinear")
+```
+
+## Quick start
+
+```{r example}
+library(rollNonlinear)
+library(data.table)
+
+set.seed(1L)
+n  <- 300L
+dt <- data.table(
+  symbol = rep(c("AAPL", "MSFT"), each = n),
+  time   = rep(
+    seq(as.POSIXct("2024-01-02 09:30:00", tz = "UTC"), by = 60, length.out = n),
+    2L
+  ),
+  close  = c(cumsum(rnorm(n)) + 150, cumsum(rnorm(n)) + 370)
+)
+
+out <- roll_nonlinear(
+  dt,
+  metrics     = c("hurst", "dfa"),
+  window_size = 128L,
+  stride      = 32L
+)
+
+head(out)
+```
+
+## Parallel execution
+
+```{r parallel, eval = FALSE}
+out_par <- roll_nonlinear(
+  dt,
+  metrics     = c("hurst", "dfa"),
+  window_size = 128L,
+  stride      = 32L,
+  parallel    = TRUE,   # uses mirai daemons
+  n_workers   = 2L      # optional: override core count
+)
+```
+
+## Learn more
+
+- **Vignette**: `vignette("rolling-nonlinear", package = "rollNonlinear")`
+- **Reference**: `?roll_nonlinear`, `?register_metric`, `?rn_daemons`
+- **pkgdown site**: <https://rollnonlinear.github.io/rollNonlinear/>

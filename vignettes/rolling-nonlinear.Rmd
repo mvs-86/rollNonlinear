@@ -1,0 +1,250 @@
+---
+title: "Rolling Nonlinear Time-Series Metrics"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Rolling Nonlinear Time-Series Metrics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>"
+)
+```
+
+```{r setup}
+library(rollNonlinear)
+library(data.table)
+```
+
+## 1. Introduction
+
+`rollNonlinear` computes rolling-window nonlinear time-series metrics on
+intraday OHLC data. It is designed for quantitative research workflows where
+you need to characterise the *dynamical regime* of a price series — e.g.,
+trend persistence (Hurst), scaling behaviour (DFA), complexity (sample/
+approximate entropy), or chaotic divergence (Lyapunov, correlation dimension)
+— over time rather than at a single point.
+
+Key features:
+
+- **Six built-in metrics**: `hurst`, `dfa`, `sample_entropy`, `approx_entropy`,
+  `lyapunov`, `corr_dim`.
+- **Extensible registry**: add custom metrics via `register_metric()`.
+- **Built-in series transforms**: `series_close()`, `series_log_returns()`,
+  `series_typical()`, `series_range()`, or any custom `function(dt)`.
+- **Multi-symbol dispatch**: accepts a data.table with a `symbol` column and
+  processes each symbol independently.
+- **Optional parallel execution** via `mirai` for multi-symbol workloads.
+
+## 2. Input format
+
+`roll_nonlinear()` expects a `data.table` (or `data.frame`, which is coerced)
+with at minimum:
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `symbol` | character | Symbol identifier |
+| `time` | POSIXct / Date / integer | Strictly increasing *within* each symbol |
+| price column(s) | numeric | Determined by the `series` argument |
+
+```{r input-format}
+set.seed(1L)
+n <- 300L
+
+dt <- data.table(
+  symbol = rep(c("AAPL", "MSFT"), each = n),
+  time   = c(
+    seq(as.POSIXct("2024-01-02 09:30:00", tz = "UTC"), by = 60, length.out = n),
+    seq(as.POSIXct("2024-01-02 09:30:00", tz = "UTC"), by = 60, length.out = n)
+  ),
+  open   = c(rep(150, n), rep(370, n)),
+  high   = c(cumsum(rnorm(n, 0, 0.3)) + 151, cumsum(rnorm(n, 0, 0.3)) + 371),
+  low    = c(cumsum(rnorm(n, 0, 0.3)) + 149, cumsum(rnorm(n, 0, 0.3)) + 369),
+  close  = c(cumsum(rnorm(n)), cumsum(rnorm(n))) + c(rep(150, n), rep(370, n))
+)
+
+head(dt)
+```
+
+## 3. Basic usage — single symbol, Hurst + DFA
+
+```{r basic, eval = TRUE}
+single <- dt[symbol == "AAPL"]
+
+out <- roll_nonlinear(
+  single,
+  metrics     = c("hurst", "dfa"),
+  window_size = 128L,
+  stride      = 16L
+)
+
+head(out)
+```
+
+Each row corresponds to one rolling window. `window_start_idx` and
+`window_end_idx` are 1-based row indices into the input symbol's data.
+
+## 4. Multi-symbol dispatch
+
+Pass the full multi-symbol table:
+
+```{r multi}
+out_multi <- roll_nonlinear(
+  dt,
+  metrics     = c("hurst", "dfa"),
+  window_size = 128L,
+  stride      = 32L
+)
+
+out_multi[, .(symbol, time, hurst, dfa_alpha)][1:6]
+```
+
+The result is keyed by `(symbol, time)`.
+
+## 5. Custom series transforms
+
+### Built-in: log-returns
+
+```{r log-returns}
+lr_out <- roll_nonlinear(
+  dt[symbol == "AAPL"],
+  series      = series_log_returns(),
+  metrics     = "hurst",
+  window_size = 128L,
+  stride      = 32L
+)
+head(lr_out[, .(time, hurst)])
+```
+
+### Typical price
+
+```{r typical}
+tp_out <- roll_nonlinear(
+  dt[symbol == "AAPL"],
+  series      = series_typical(),
+  metrics     = "hurst",
+  window_size = 128L,
+  stride      = 32L
+)
+head(tp_out[, .(time, hurst)])
+```
+
+### User-defined transform
+
+Any function `function(dt) -> numeric` is accepted:
+
+```{r user-fn}
+log_close <- function(dt_chunk) log(dt_chunk[["close"]])
+
+out_logclose <- roll_nonlinear(
+  dt[symbol == "AAPL"],
+  series      = log_close,
+  metrics     = "hurst",
+  window_size = 128L,
+  stride      = 32L
+)
+head(out_logclose[, .(time, hurst)])
+```
+
+## 6. Metric arguments
+
+Use `metric_args` to override per-metric defaults:
+
+```{r metric-args}
+ent_out <- roll_nonlinear(
+  dt[symbol == "AAPL"],
+  metrics     = c("sample_entropy", "approx_entropy"),
+  window_size = 100L,
+  stride      = 20L,
+  metric_args = list(
+    sample_entropy = list(dimension = 2L, r_frac = 0.15),
+    approx_entropy = list(dimension = 2L, r_frac = 0.20)
+  )
+)
+head(ent_out[, .(time, sample_entropy, approx_entropy)])
+```
+
+> **Note:** `r_frac` scales the tolerance `r` as `r_frac * sd(x)` per
+> window (volatility-normalised). For volatility-sensitive analysis,
+> pass `r` explicitly instead.
+
+## 7. Parallel execution
+
+For workloads with many symbols, `parallel = TRUE` dispatches each symbol to
+a local `mirai` daemon:
+
+```{r parallel, eval = FALSE}
+# One-time setup (optional — rollNonlinear manages daemons automatically)
+rn_daemons(4L)
+
+out_par <- roll_nonlinear(
+  dt,
+  metrics     = c("hurst", "dfa"),
+  window_size = 128L,
+  stride      = 32L,
+  parallel    = TRUE
+)
+
+rn_stop_daemons()
+```
+
+### Daemon management
+
+| Scenario | Behaviour |
+|----------|-----------|
+| No daemons running | Package starts daemons (using `parallelly::availableCores(omit=1)` by default), then tears them down on exit. |
+| Daemons already running (user-managed) | Package uses existing daemons and does **not** stop them. |
+
+Use `n_workers` to override the automatic core count:
+
+```{r parallel-workers, eval = FALSE}
+roll_nonlinear(dt, parallel = TRUE, n_workers = 2L)
+```
+
+### When parallel pays off
+
+Parallel execution has setup overhead (~100–500 ms). Rule of thumb:
+
+- **Worth it**: ≥ 10 symbols *and* ≥ 1 000 bars each.
+- **Not worth it**: small datasets (< ~10 symbols or < ~1 000 bars each) —
+  sequential is usually faster.
+
+## 8. Extending the package — `register_metric()`
+
+Register a custom metric that returns the mean absolute deviation:
+
+```{r register}
+register_metric(
+  name    = "mad_metric",
+  fn      = function(x, .args = list()) {
+    c(mad_metric = mean(abs(x - mean(x, na.rm = TRUE)), na.rm = TRUE))
+  },
+  outputs = "mad_metric"
+)
+
+available_metrics()
+
+mad_out <- roll_nonlinear(
+  dt[symbol == "AAPL"],
+  metrics     = "mad_metric",
+  window_size = 64L,
+  stride      = 16L
+)
+head(mad_out[, .(time, mad_metric)])
+```
+
+Registered metrics work identically under both sequential and parallel
+execution.
+
+## Caveats and known limitations
+
+- **Lyapunov & correlation dimension** require substantial data (≥ 500–1 000
+  bars per window) to produce meaningful estimates. Short windows yield
+  unreliable values; use them with `\donttest{}` guards in your scripts.
+- **Sample/approximate entropy** with `r_frac` is volatility-normalised by
+  default. Pass `r` explicitly if you need volatility-sensitive comparisons.
+- **Parallel overhead**: for small datasets, sequential mode is faster.
+  Prefer `parallel = TRUE` for wide, large-bar symbol sets.

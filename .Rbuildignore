@@ -15,3 +15,5 @@
 ^revdep$
 ^\.git$
 ^\.gitignore$
+^\.vscode$
+^Dockerfile$

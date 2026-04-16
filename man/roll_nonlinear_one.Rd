@@ -11,7 +11,8 @@ roll_nonlinear_one(
   window_size = 100L,
   stride = 1L,
   min_obs = window_size,
-  on_error = c("warn_na", "stop", "silent_na")
+  on_error = c("warn_na", "stop", "silent_na"),
+  metric_args = list()
 )
 }
 \arguments{
@@ -43,6 +44,11 @@ formed windows only).}
 indices.}
 \item{\code{"silent_na"}}{Fill with \code{NA_real_} silently.}
 }}
+
+\item{metric_args}{Named list of per-metric argument overrides, keyed by
+metric name. Each element is passed as \code{.args} to the metric wrapper
+(merged with the metric's registered defaults via \code{\link[utils:modifyList]{utils::modifyList()}}).
+Names must be a subset of \code{metrics}. Default: \code{list()}.}
 }
 \value{
 A keyed \code{data.table} (keyed by \code{time}) with one row per valid
