@@ -28,7 +28,9 @@ Imports:
     rlang
 Suggests:
     covr,
+    ggplot2 (>= 3.4.0),
     knitr,
+    patchwork (>= 1.2.0),
     rmarkdown,
     testthat (>= 3.0.0),
     withr

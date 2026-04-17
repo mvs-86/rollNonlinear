@@ -248,3 +248,92 @@ execution.
   default. Pass `r` explicitly if you need volatility-sensitive comparisons.
 - **Parallel overhead**: for small datasets, sequential mode is faster.
   Prefer `parallel = TRUE` for wide, large-bar symbol sets.
+
+## 9. Visualising results
+
+`rn_plot()` turns any `roll_nonlinear()` result into a **ggplot2** figure.
+Install the optional dependencies if needed:
+
+```r
+install.packages(c("ggplot2", "patchwork"))
+```
+
+All examples below use the `dt` and metric results built earlier.
+
+### Time-series of multiple metrics
+
+```{r ts-multi, eval = requireNamespace("ggplot2", quietly = TRUE)}
+rn_plot(out_multi,
+        metrics = c("hurst", "dfa_alpha"),
+        type    = "time_series",
+        title   = "Hurst & DFA — all symbols")
+```
+
+The plot is faceted by metric; each symbol gets its own coloured line.
+
+### Regime threshold overlay
+
+```{r ts-regime, eval = requireNamespace("ggplot2", quietly = TRUE)}
+rn_plot(out_multi,
+        metrics           = "hurst",
+        type              = "time_series",
+        regime_thresholds = "auto",
+        title             = "Hurst exponent with regime bands")
+```
+
+`regime_thresholds = "auto"` draws dashed reference lines and shaded bands at
+0.45 (mean-reverting) and 0.55 (trending) for `hurst` and `dfa_alpha`. Values
+in the blue region are mean-reverting; values in the red region are trending.
+
+### Per-symbol facets
+
+Show one metric across all symbols in separate panels:
+
+```{r sym-facet, eval = requireNamespace("ggplot2", quietly = TRUE)}
+rn_plot(out_multi,
+        metrics = "hurst",
+        type    = "symbols",
+        title   = "Hurst by symbol")
+```
+
+### Metric distributions
+
+```{r dist, eval = requireNamespace("ggplot2", quietly = TRUE)}
+rn_plot(out_multi,
+        type  = "distribution",
+        title = "Rolling metric distributions")
+```
+
+Overlapping histograms (one fill colour per symbol) make it easy to compare
+how metric distributions shift across instruments.
+
+### Stacked price + metric panel
+
+Pass the original data via `original_data` to add a price series on top:
+
+```{r panel, eval = requireNamespace("ggplot2", quietly = TRUE) && requireNamespace("patchwork", quietly = TRUE)}
+single_result <- out_multi[symbol == "AAPL"]
+single_dt     <- dt[symbol == "AAPL"]
+
+rn_plot(single_result,
+        metrics       = "hurst",
+        type          = "panel",
+        original_data = single_dt,
+        title         = "AAPL — close price & Hurst exponent")
+```
+
+The two panels share the same x-axis range; the height ratio is 1:1 for a
+single metric (one price panel + one metric panel).
+
+### Customising with ggplot2 layers
+
+`rn_plot()` returns a standard `ggplot` (or `patchwork`) object, so you can
+add any ggplot2 layers on top:
+
+```{r custom, eval = requireNamespace("ggplot2", quietly = TRUE)}
+library(ggplot2)
+
+rn_plot(out_multi, metrics = "hurst", type = "time_series") +
+  scale_colour_brewer(palette = "Set1") +
+  theme(legend.position = "bottom")
+```
