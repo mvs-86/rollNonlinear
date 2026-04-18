@@ -54,15 +54,47 @@
 
 #' @noRd
 .worker_roll_one <- function(chunk, metrics, window_size, stride, series_spec,
-                              time_col, symbol_col, min_obs, metric_args,
-                              on_error, metric_specs = list()) {
+                             time_col, symbol_col, min_obs, metric_args,
+                             on_error, metric_specs = list(),
+                             source_path = NULL,
+                             register_metric_fn = NULL,
+                             thaw_series_fn = NULL,
+                             roll_one_fn = NULL) {
+  if (!"rollNonlinear" %in% loadedNamespaces()) {
+    if (requireNamespace("rollNonlinear", quietly = TRUE)) {
+      loadNamespace("rollNonlinear")
+    } else if (!is.null(source_path) &&
+               file.exists(file.path(source_path, "DESCRIPTION")) &&
+               requireNamespace("pkgload", quietly = TRUE)) {
+      pkgload::load_all(source_path, export_all = FALSE, helpers = FALSE, quiet = TRUE)
+    } else {
+      cli::cli_abort(
+        "Worker could not load the {.pkg rollNonlinear} namespace."
+      )
+    }
+  }
+
+  worker_ns <- asNamespace("rollNonlinear")
+  register_metric_internal <- register_metric_fn %||%
+    get(".register", envir = worker_ns, inherits = FALSE)
+  thaw_series_internal <- thaw_series_fn %||%
+    get(".thaw_series", envir = worker_ns, inherits = FALSE)
+  roll_one_internal <- roll_one_fn %||%
+    get("roll_nonlinear_one", envir = worker_ns, inherits = FALSE)
+
   # Register any custom/extra metrics that aren't in this worker's registry yet
   for (nm in names(metric_specs)) {
     spec <- metric_specs[[nm]]
-    .register(nm, spec$fn, spec$outputs, spec$defaults, spec$min_len)
+    register_metric_internal(
+      nm,
+      spec$fn,
+      spec$outputs,
+      spec$defaults,
+      spec$min_len
+    )
   }
 
-  series_fn <- .thaw_series(series_spec)
+  series_fn <- thaw_series_internal(series_spec)
   sym       <- chunk[[symbol_col]][1L]
 
   # validate time monotonicity
@@ -76,7 +108,7 @@
 
   x <- series_fn(chunk)
 
-  res <- roll_nonlinear_one(
+  res <- roll_one_internal(
     x           = x,
     times       = chunk[[time_col]],
     metrics     = metrics,

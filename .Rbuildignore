@@ -4,6 +4,7 @@
 ^\.RData$
 ^\.Ruserdata$
 ^LICENSE\.md$
+^README\.html$
 ^README\.Rmd$
 ^_pkgdown\.yml$
 ^docs$

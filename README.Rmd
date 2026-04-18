@@ -42,7 +42,11 @@ remotes::install_github("rollnonlinear/rollNonlinear")
 ## Quick start
 
 ```{r example}
-library(rollNonlinear)
+if (requireNamespace("rollNonlinear", quietly = TRUE)) {
+  library(rollNonlinear)
+} else {
+  pkgload::load_all(".", export_all = FALSE, helpers = FALSE, quiet = TRUE)
+}
 library(data.table)
 
 set.seed(1L)
@@ -77,6 +81,33 @@ out_par <- roll_nonlinear(
   parallel    = TRUE,   # uses mirai daemons
   n_workers   = 2L      # optional: override core count
 )
+```
+
+## Yahoo Finance CLI utility
+
+The repository also ships a small `Rscript` utility that downloads Yahoo Finance
+OHLC data and runs the package engine end to end:
+
+```sh
+Rscript inst/scripts/roll-nonlinear-yahoo.R \
+  --symbols AAPL MSFT \
+  --start 2024-01-01 \
+  --end 2024-12-31 \
+  --window-size 128 \
+  --stride 16 \
+  --metrics hurst dfa \
+  --series log_returns \
+  --output output/rolling-metrics.csv
+```
+
+Use repeated `--metric-arg` flags for metric-specific overrides, for example:
+
+```sh
+Rscript inst/scripts/roll-nonlinear-yahoo.R \
+  --symbols AAPL \
+  --metrics sample_entropy \
+  --metric-arg sample_entropy.dimension=3 \
+  --metric-arg sample_entropy.r_frac=0.25
 ```
 
 ## Learn more

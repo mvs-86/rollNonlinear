@@ -22,15 +22,18 @@ Imports:
     checkmate,
     cli,
     data.table,
+    quantmod,
     mirai (>= 2.0.0),
     nonlinearTseries,
     parallelly,
     rlang
 Suggests:
     covr,
+    GetoptLong,
     ggplot2 (>= 3.4.0),
     knitr,
     patchwork (>= 1.2.0),
+    pkgload,
     rmarkdown,
     testthat (>= 3.0.0),
     withr
