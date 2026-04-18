@@ -190,6 +190,7 @@ rn_stop_daemons <- function() {
   series_spec  <- .freeze_series(series)
   n_chunks     <- length(chunks)
   sym_names    <- names(chunks)
+  source_path  <- getNamespaceInfo(asNamespace("rollNonlinear"), "path")
 
   # Capture worker function as data (avoids ::: in source, serializes cleanly)
   wfn <- .worker_roll_one
@@ -213,7 +214,8 @@ rn_stop_daemons <- function() {
         min_obs      = min_obs,
         metric_args  = metric_args,
         on_error     = on_error,
-        metric_specs = metric_specs
+        metric_specs = metric_specs,
+        source_path  = source_path
       ),
       wfn          = wfn,
       chunk        = chunk,
@@ -226,7 +228,8 @@ rn_stop_daemons <- function() {
       min_obs      = min_obs,
       metric_args  = metric_args,
       on_error     = on_error,
-      metric_specs = metric_specs
+      metric_specs = metric_specs,
+      source_path  = source_path
     )
   }
 

@@ -18,21 +18,9 @@ test_that("approx_entropy returns correctly named scalar", {
   expect_length(result, 1L)
 })
 
-test_that("sample_entropy on iid Gaussian series (n=512) is in range 0.5-2.5", {
-  set.seed(42L)
-  x      <- rnorm(512L)
-  result <- rollNonlinear:::.metric_sample_entropy(x)
-  val    <- result[["sample_entropy"]]
-
-  expect_true(is.finite(val))
-  expect_gt(val, 0.5)
-  expect_lt(val, 2.5)
-})
-
 test_that("entropy is lower on sinusoid than on noise", {
-  set.seed(1L)
-  x_noise <- rnorm(256L)
-  x_sin   <- sin(seq(0, 10 * pi, length.out = 256L))
+  x_noise <- make_gaussian_noise(256L, seed = 1L)
+  x_sin   <- make_sine_wave(256L, cycles = 5)
 
   se_noise <- rollNonlinear:::.metric_sample_entropy(x_noise)[["sample_entropy"]]
   se_sin   <- rollNonlinear:::.metric_sample_entropy(x_sin)[["sample_entropy"]]

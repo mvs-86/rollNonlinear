@@ -50,3 +50,31 @@ make_times <- function(n, start = "2024-01-02 09:30:00", freq_sec = 60L) {
   t0 <- as.POSIXct(start, tz = "UTC")
   t0 + (seq_len(n) - 1L) * freq_sec
 }
+
+#' Gaussian white noise
+#' @param n Number of observations.
+#' @param seed Random seed (default 1L).
+make_gaussian_noise <- function(n, seed = 1L) {
+  set.seed(seed)
+  stats::rnorm(n)
+}
+
+#' Sine wave with a fixed number of cycles
+#' @param n Number of observations.
+#' @param cycles Number of complete cycles across the series.
+make_sine_wave <- function(n, cycles = 10) {
+  sin(seq(0, 2 * pi * cycles, length.out = n))
+}
+
+#' Logistic map
+#' @param n Number of observations.
+#' @param r Logistic map parameter.
+#' @param x0 Initial condition in (0, 1).
+make_logistic_map <- function(n, r = 4, x0 = 0.12345) {
+  x       <- numeric(n)
+  x[[1L]] <- x0
+  for (i in seq_len(n - 1L)) {
+    x[[i + 1L]] <- r * x[[i]] * (1 - x[[i]])
+  }
+  x
+}
